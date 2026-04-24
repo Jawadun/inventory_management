@@ -1,0 +1,795 @@
+{
+  "info": {
+    "name": "Inventory Management System",
+    "description": "API collection for Inventory Management System\n\n**Base URL:** http://localhost:8080\n\n**Authentication:**\n- Most endpoints require Bearer token in Authorization header\n- Get token from /api/auth/login\n- Token format: Bearer <access_token>",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "issueId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "noticeId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "javascript",
+        "exec": [
+          "// Token is auto-sent via Bearer auth in collection settings",
+          "// If you get 401, manually call /api/auth/refresh and update accessToken variable"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Public Endpoints",
+      "item": [
+        {
+          "name": "Get Public Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/public/stats"
+          }
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/public/dashboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/register",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"newuser\",\n    \"password\": \"password123\",\n    \"full_name\": \"New User\",\n    \"email\": \"user@example.com\",\n    \"department\": \"IT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "javascript",
+                "exec": [
+                  "if (pm.response.json().access_token) {",
+                  "    pm.variables.set('accessToken', pm.response.json().access_token);",
+                  "    pm.variables.set('refreshToken', pm.response.json().refresh_token);",
+                  "    pm.variables.set('userId', pm.response.json().user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/logout",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User (Self)",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/users/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/users/update",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Updated Name\",\n    \"email\": \"updated@example.com\",\n    \"department\": \"HR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/users/password",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"old_password\": \"oldpassword\",\n    \"new_password\": \"newpassword123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/users"
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/users/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\",\n    \"full_name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"department\": \"IT\",\n    \"role_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/users/deactivate",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_id\": \"{{userId}}\",\n    \"is_active\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Roles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/roles"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/items?page=1&page_size=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/items/get?id={{itemId}}"
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/items/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Item\",\n    \"sku\": \"SKU001\",\n    \"barcode\": \"123456789\",\n    \"category_id\": \"\",\n    \"supplier_id\": \"\",\n    \"quantity\": 10,\n    \"min_quantity\": 5,\n    \"unit\": \"pcs\",\n    \"location\": \"Warehouse A\",\n    \"purchase_price\": 100.00,\n    \"status\": \"available\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/items/update",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": \"{{itemId}}\",\n    \"name\": \"Updated Item Name\",\n    \"quantity\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "Adjust Quantity",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/items/adjust",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"item_id\": \"{{itemId}}\",\n    \"change\": 5,\n    \"reason\": \"Added stock\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/items/delete?id={{itemId}}"
+          }
+        },
+        {
+          "name": "Get Item History",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/items/history?id={{itemId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/categories/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Electronics\",\n    \"description\": \"Electronic items\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/categories/update",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": \"{{categoryId}}\",\n    \"name\": \"Updated Electronics\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/categories/delete?id={{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        {
+          "name": "List Suppliers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/suppliers"
+          }
+        },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/suppliers/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"ABC Supplies\",\n    \"contact_person\": \"John Doe\",\n    \"phone\": \"123456789\",\n    \"email\": \"supplier@example.com\",\n    \"address\": \"123 Main St\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Supplier",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/suppliers/update",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": \"{{supplierId}}\",\n    \"name\": \"Updated Supplier\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Supplier",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/suppliers/delete?id={{supplierId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Requests",
+      "item": [
+        {
+          "name": "List My Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/requests"
+          }
+        },
+        {
+          "name": "Get Request",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/requests/get?id={{requestId}}"
+          }
+        },
+        {
+          "name": "Create Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/requests/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"item_id\": \"{{itemId}}\",\n    \"request_type\": \"personal\",\n    \"quantity\": 2,\n    \"reason\": \"Need for project\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/requests/cancel",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_id\": \"{{requestId}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Requests",
+      "item": [
+        {
+          "name": "List All Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/requests/list"
+          }
+        },
+        {
+          "name": "Get Pending Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/requests/pending"
+          }
+        },
+        {
+          "name": "Approve Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/requests/approve",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_id\": \"{{requestId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reject Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/requests/reject",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_id\": \"{{requestId}}\",\n    \"reason\": \"Not available\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Fulfill Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/requests/fulfill",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_id\": \"{{requestId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Manage Single Request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/requests/manage",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_id\": \"{{requestId}}\",\n    \"action\": \"approve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Bulk Action",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/requests/bulk",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"request_ids\": [\"{{requestId}}\"],\n    \"action\": \"pending\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "List Issues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/issues"
+          }
+        },
+        {
+          "name": "Get Issue",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/issues/get?id={{issueId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Issues",
+      "item": [
+        {
+          "name": "List All Issues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/issues/list"
+          }
+        },
+        {
+          "name": "Create Issue",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/issues/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"item_id\": \"{{itemId}}\",\n    \"recipient_id\": \"{{userId}}\",\n    \"quantity\": 1,\n    \"issue_type\": \"personal\",\n    \"notes\": \"Issued for project\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Return Item",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/issues/return",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issue_id\": \"{{issueId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Approve Issue",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/issues/approve",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issue_id\": \"{{issueId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reject Issue",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/issues/reject",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issue_id\": \"{{issueId}}\",\n    \"reason\": \"Not approved\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Overdue Issues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/issues/overdue"
+          }
+        },
+        {
+          "name": "Bulk Action Issues",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/issues/bulk",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issue_ids\": [\"{{issueId}}\"],\n    \"action\": \"issued\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notices",
+      "item": [
+        {
+          "name": "List Notices (Public)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notices"
+          }
+        },
+        {
+          "name": "Get Notice",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notices/get?id={{noticeId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Notices",
+      "item": [
+        {
+          "name": "List All Notices",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/notices/list"
+          }
+        },
+        {
+          "name": "Create Notice",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/notices/create",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"System Maintenance\",\n    \"content\": \"System will be down for maintenance on Saturday.\",\n    \"priority\": \"high\",\n    \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Notice",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/admin/notices/update",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": \"{{noticeId}}\",\n    \"title\": \"Updated Notice\",\n    \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Notice",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/admin/notices/delete?id={{noticeId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/dashboard"
+          }
+        },
+        {
+          "name": "Get Overview",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/overview"
+          }
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/analytics"
+          }
+        },
+        {
+          "name": "Get Recent Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/recent-requests"
+          }
+        },
+        {
+          "name": "Get Recent Issues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/recent-issues"
+          }
+        },
+        {
+          "name": "Get Overdue Items",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/overdue"
+          }
+        },
+        {
+          "name": "Get Low Stock Items",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/low-stock"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Items List",
+      "item": [
+        {
+          "name": "List Items (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/items/list"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Suppliers List",
+      "item": [
+        {
+          "name": "List Suppliers (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/suppliers/list"
+          }
+        },
+        {
+          "name": "Toggle Supplier",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/suppliers/toggle",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"supplier_id\": \"{{supplierId}}\",\n    \"active\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users List",
+      "item": [
+        {
+          "name": "List Users (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/users/list"
+          }
+        },
+        {
+          "name": "Toggle User",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/users/toggle",
+            "header": "Content-Type: application/json",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_id\": \"{{userId}}\",\n    \"active\": true\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+version: '3'
+
+vars:
+  COMPOSE_FILE: docker compose.yml
+  PROJECT_NAME: inventory
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+  DOCKER_DIR: docker
+
+tasks:
+  # ====================
+  # Development Tasks
+  # ====================
+
+  dev:
+    desc: Start full system in development mode
+    cmds:
+      - task: up
+
+  up:
+    desc: Start all services with docker compose
+    cmds:
+      - docker compose up -d
+    vars:
+      MESSAGE: "Services started - Frontend: http://localhost:3000 | Backend: http://localhost:8080"
+
+  down:
+    desc: Stop all services
+    cmds:
+      - docker compose down
+
+  restart:
+    desc: Restart all services
+    cmds:
+      - docker compose restart
+
+  # ====================
+  # Build Tasks
+  # ====================
+
+  build:
+    desc: Build all containers
+    cmds:
+      - docker compose build --no-cache
+
+  build-quick:
+    desc: Build containers without cache
+    cmds:
+      - docker compose build
+
+  # ====================
+  # Development (Local)
+  # ====================
+
+  dev:backend:
+    desc: Run backend locally (requires PostgreSQL)
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - go run ./cmd/server
+
+  dev:frontend:
+    desc: Run frontend locally with hot reload
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm run dev
+
+  dev:install:
+    desc: Install all dependencies
+    cmds:
+      - task: deps:frontend
+      - task: deps:backend
+
+  # ====================
+  # Database Tasks
+  # ====================
+
+  db:migrate:
+    desc: Run database migrations
+    cmds:
+      - docker compose exec -T postgres psql -U postgres -d inventory -f /docker-entrypoint-initdb.d/001_initial_schema.sql || true
+
+  db:shell:
+    desc: Open PostgreSQL shell
+    cmds:
+      - docker compose exec postgres psql -U postgres -d inventory
+
+  db:backup:
+    desc: Backup database to file
+    cmds:
+      - docker compose exec -T postgres pg_dump -U postgres inventory > backup_$(date +%Y%m%d_%H%M%S).sql
+
+  # ====================
+  # Logging & Monitoring
+  # ====================
+
+  logs:
+    desc: View all service logs
+    cmds:
+      - docker compose logs -f
+
+  logs:backend:
+    desc: View backend logs
+    cmds:
+      - docker compose logs -f backend
+
+  logs:frontend:
+    desc: View frontend logs
+    cmds:
+      - docker compose logs -f frontend
+
+  logs:db:
+    desc: View database logs
+    cmds:
+      - docker compose logs -f postgres
+
+  status:
+    desc: Show status of all services
+    cmds:
+      - docker compose ps
+
+  # ====================
+  # Dependency Tasks
+  # ====================
+
+  deps:frontend:
+    desc: Install frontend dependencies
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - npm install
+
+  deps:backend:
+    desc: Install backend dependencies
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - go mod download
+
+  deps:all:
+    desc: Install all dependencies (frontend + backend)
+    cmds:
+      - task: deps:frontend
+      - task: deps:backend
+
+  # ====================
+  # Cleanup Tasks
+  # ====================
+
+  clean:
+    desc: Stop services and remove volumes
+    cmds:
+      - docker compose down -v
+
+  clean:images:
+    desc: Remove all project images
+    cmds:
+      - docker compose down --rmi all
+
+  clean:build:
+    desc: Remove build artifacts
+    cmds:
+      - rm -rf {{.FRONTEND_DIR}}/dist
+      - rm -rf {{.FRONTEND_DIR}}/node_modules
+
+  # ====================
+  # Utility Tasks
+  # ====================
+
+  ps:
+    desc: List running containers
+    cmds:
+      - docker compose ps
+
+  pull:
+    desc: Pull latest images
+    cmds:
+      - docker compose pull
+
+  config:
+    desc: Validate docker compose configuration
+    cmds:
+      - docker compose config
+
+  help:
+    desc: Show this help message
+    cmds:
+      - task --list-all
