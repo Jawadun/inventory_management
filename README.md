@@ -6,10 +6,13 @@
 # 1. Clone the repository
 cd /path/to/inventory
 
-# 2. Start all services
-docker-compose up -d
+# 2. Install Task (alternative to Make)
+# https://taskfile.dev/installation/
 
-# 3. Access the application
+# 3. Start all services
+task up
+
+# 4. Access the application
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8080
 ```
@@ -43,7 +46,27 @@ docker-compose up -d
 
 ## Development Commands
 
-### Using Make (recommended)
+### Using Task (recommended)
+```bash
+# Install task: https://taskfile.dev/installation/
+
+task up          # Start services
+task down        # Stop services
+task restart     # Restart services
+task logs        # View logs
+task clean       # Remove all data
+
+# Run locally (requires PostgreSQL running)
+task dev:backend    # Start backend
+task dev:frontend   # Start frontend with hot reload
+
+# Database
+task db:shell       # Open PostgreSQL shell
+task db:backup      # Backup database
+task db:migrate     # Run migrations
+```
+
+### Using Make
 ```bash
 make up          # Start services
 make down       # Stop services
@@ -74,11 +97,11 @@ docker-compose down -v
 
 ```bash
 # Start database only
-docker-compose up -d postgres
+task up  # or docker compose up -d postgres
 
-# Run migrations
-# ( You'll need to run these manually for now)
-# psql -h localhost -U postgres -d inventory -f db/migrations/001_initial_schema.sql
+# Migrations run automatically from db/migrations/ folder
+# Additional migrations can be run manually:
+task db:shell
 
 # Start backend
 cd backend

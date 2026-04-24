@@ -78,11 +78,19 @@ tasks:
     desc: Run database migrations
     cmds:
       - docker compose exec -T postgres psql -U postgres -d inventory -f /docker-entrypoint-initdb.d/001_initial_schema.sql || true
+      - docker compose exec -T postgres psql -U postgres -d inventory -f /docker-entrypoint-initdb.d/002_pending_users.sql || true
 
   db:shell:
     desc: Open PostgreSQL shell
     cmds:
       - docker compose exec postgres psql -U postgres -d inventory
+
+  db:query:
+    desc: Run a SQL query
+    cmds:
+      - docker compose exec -T postgres psql -U postgres -d inventory -c "{{.CLI_ARGS}}"
+    vars:
+      CLI_ARGS: ""
 
   db:backup:
     desc: Backup database to file
